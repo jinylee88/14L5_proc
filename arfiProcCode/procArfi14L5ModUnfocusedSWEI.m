@@ -51,9 +51,14 @@ par = load(parFile);
 par.kernelLength = kernelLength;
 par.interpFactor = interpFactor;
 
+if exist(nDMASWIFbufferevents)
+    if nDMASWIFbufferevents==1
+        par.nref=par.nref-1;  %With the DMA-SWIF buffer event on we get one more reference frame than we need
+    end
+end
+
 % Pull out IQ data
 data = readSwif(fname, dimsname);
-par.nref=par.nref-1;  %With the DMA-SWIF buffer event on we get one more reference frame than we need
 I = single(data.I(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+1):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
 Q = single(data.Q(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+1):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
 %I = single(data.I(:,:,[2:2:6 7:(7+2) 11:2:29]));  %focused track data

@@ -37,26 +37,32 @@ end
 if nargin<6
     ref_idx = []; % unless explicitly supplied, value of ref_idx is set after loading in par file and detecting location of push frame
 end
-
+%
 % Check to make sure data, dimensions, and parameters files all exist
 dimsname = ['SWIF_ADataDims_' timeStamp '.txt'];
 if ~exist(fname, 'file'),error('No data file found');end
 if ~exist(dimsname, 'file'),error('No dimensions file found');end
 if ~exist(parFile, 'file'), error('No parameters file found');end
 
+% Load parameters file
+par = load(parFile);
+par.kernelLength = kernelLength;
+par.interpFactor = interpFactor;
+if exist(nDMASWIFbufferevents)
+    if nDMASWIFbufferevents==1
+        par.nref=par.nref-1;  %With the DMA-SWIF buffer event on we get one more reference frame than we need
+    end
+end
 % Pull out IQ data
 data = readSwif(fname, dimsname);
 %This is only the unfocused track data
 %I = single(data.I(:,:,[1:2:6 7:(7+2) 10:2:29 30:end]));
 %Q = single(data.I(:,:,[1:2:6 7:(7+2) 10:2:29 30:end]));
-I = single(data.I(:,:,[2:2:6 7:(7+2) 11:2:29]));  %focused track data
-Q = single(data.Q(:,:,[2:2:6 7:(7+2) 11:2:29]));  %focused track data
+I = single(data.I(:,:,[2:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1))]));  %focused track data
+Q = single(data.Q(:,:,[2:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1))]));  %focused track data
+%Q = single(data.Q(:,:,[2:2:par.nref par.nref:(par.nref+2) 11:2:29]));  %focused track data
 clear data
 
-% Load parameters file
-par = load(parFile);
-par.kernelLength = kernelLength;
-par.interpFactor = interpFactor;
 
 % Confirm location of push frame in case of DMA-SWIF Buffer Event
 par.nref=floor(par.nref/2);  %Change was made here to size of nref because of alternating push/track

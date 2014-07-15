@@ -44,19 +44,25 @@ if ~exist(fname, 'file'),error('No data file found');end
 if ~exist(dimsname, 'file'),error('No dimensions file found');end
 if ~exist(parFile, 'file'), error('No parameters file found');end
 
+% Load parameters file
+par = load(parFile);
+par.kernelLength = kernelLength;
+par.interpFactor = interpFactor;
+if exist(nDMASWIFbufferevents)
+    if nDMASWIFbufferevents==1
+        par.nref=par.nref-1;  %With the DMA-SWIF buffer event on we get one more reference frame than we need
+    end
+end
 % Pull out IQ data
 data = readSwif(fname, dimsname);
 %This is only the unfocused track data
 %I = single(data.I(:,:,[1:2:6 7:(7+2) 10:2:29 30:end]));
 %Q = single(data.I(:,:,[1:2:6 7:(7+2) 10:2:29 30:end]));
-I = single(data.I(:,:,[2:2:6 7:(7+2) 11:2:29]));  %focused track data
-Q = single(data.Q(:,:,[2:2:6 7:(7+2) 11:2:29]));  %focused track data
+I = single(data.I(:,:,[2:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1))]));  %focused track data
+Q = single(data.Q(:,:,[2:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1))]));  %focused track data
+%Q = single(data.Q(:,:,[2:2:par.nref par.nref:(par.nref+2) 11:2:29]));  %focused track data
 clear data
 
-% Load parameters file
-par = load(parFile);
-par.kernelLength = kernelLength;
-par.interpFactor = interpFactor;
 
 % Confirm location of push frame in case of DMA-SWIF Buffer Event
 par.nref=floor(par.nref/2);  %Change was made here to size of nref because of alternating push/track
@@ -136,7 +142,7 @@ axial = axial + par.kernelLength * par.lambda / 2; % shift axial vector based on
 %The time vector had to be modified such that at least until the last 31
 %tracks, the PRF is half of what we thought it was.
 par.priusec([1 3]) =par.priusec([1 3]).*2;  %double the first and 3rd pri value because it doesn't take into account the 
-par.ntrack=par.ntrack/2  %divide ntrack by 2 because it doesn't take into account alternating focused unfocused
+par.ntrack=par.ntrack(1)/2;  %divide ntrack by 2 because it doesn't take into account alternating focused unfocused
 [t, txTypeIndex, pushPRF] = genTimeVector(par);
 par.txTypeIndex = txTypeIndex;
 par.pushPRF = pushPRF;
@@ -244,10 +250,11 @@ end
 
 % Check existing parameters, add proc parameters to parFile
 par = checkParams(par);
+parFile = fullfile(pwd, sprintf('parA_%s.mat',timeStamp));
 save(parFile,'-struct','par');
 
 % Save time stamped results file
-resfile = ['res_' timeStamp '.mat'];
+resfile = ['resA_' timeStamp '.mat'];   %A for Arfi
 
 % Save only ARFI data from push
 arfiBeams=[8];
