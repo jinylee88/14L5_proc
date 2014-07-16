@@ -10,7 +10,7 @@ function [t, arfidata] = filtArfiData2(axial, t, arfidata, cutoffFreq, axFiltKer
 
 if nargin<4,cutoffFreq = [20 1000];end % filter cutoff frequencies (Hz)
 if nargin<5,axFiltKer = 0.5;end % axial filter length (mm)
-if nargin<6,stdCutoff = 7;end % cutoff in microns for the minimum standard deviation for push/reverb time steps
+if nargin<6,stdCutoff = 10;end % cutoff in microns for the minimum standard deviation for push/reverb time steps
 
 
 % determine push and reverb time steps, then remove them

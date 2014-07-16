@@ -15,9 +15,11 @@ if nargin<6,stdCutoff = 7;end % cutoff in microns for the minimum standard devia
 
 % determine push and reverb time steps, then remove them
 if ndims(arfidata)==3
+    arfidata=arfidata(:,:,1:length(t));
     out = squeeze(max(std(arfidata,0,2),[],1));
     ts = out<stdCutoff; % valid time steps
 elseif ndims(arfidata)==4
+    arfidata=arfidata(:,:,:,1:length(t));
     out = squeeze(max(max(std(arfidata,0,3),[],1),[],2));
     ts = out<stdCutoff; % valid time steps
 end

@@ -141,7 +141,7 @@ fprintf('Differentiating...');
 %v = zeros(size(sweidata,1),size(sweidata,2),size(sweidata,3)-20,'single');
 arfidata_tmp = sweidata(:,:,20:end);
 t_tmp = t(20:end);
-[arfidata_tmp,t_tmp]=UpsampleTimeAndDispPlanes(arfidata_tmp,t_tmp,48);
+%[arfidata_tmp,t_tmp]=UpsampleTimeAndDispPlanes(arfidata_tmp,t_tmp,48);
 v = zeros(size(sweidata,1),size(sweidata,2),length(t_tmp)-1,'single');
 t1 = 0.5*t_tmp(1:end-1) + 0.5*t_tmp(2:end);
 %%UPSAMPLE HERE TO 50KHz

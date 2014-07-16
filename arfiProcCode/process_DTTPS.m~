@@ -2,7 +2,7 @@ function [dttps_file] = process_DTTPS(datapath,useparfor)
 %process_DTTPS processes "complete" dataset
 
 %% Inital Paths and parameters
-numSWEI = 2;
+numSWEI = 1;
 numARFI = 0;
 %%
 tic            
@@ -138,10 +138,11 @@ normData = load('/getlab/pjh7/SC2000/FullySampled12L4/data/20140108/3kPa/1p5mm/n
 %% Differentiate displacements
 toc1 = toc;
 fprintf('Differentiating...');
-v = zeros(size(sweidata,1),size(sweidata,2),size(sweidata,3)-20,'single');
+%v = zeros(size(sweidata,1),size(sweidata,2),size(sweidata,3)-20,'single');
 arfidata_tmp = sweidata(:,:,20:end);
 t_tmp = t(20:end);
-[planesup,t_tmp]=UpsampleTimeAndDispPlanes(arfidata_tmp,t_tmp,desiredPRF)
+%[arfidata_tmp,t_tmp]=UpsampleTimeAndDispPlanes(arfidata_tmp,t_tmp,48);
+v = zeros(size(sweidata,1),size(sweidata,2),length(t_tmp)-1,'single');
 t1 = 0.5*t_tmp(1:end-1) + 0.5*t_tmp(2:end);
 %%UPSAMPLE HERE TO 50KHz
 
@@ -159,6 +160,7 @@ fprintf('done (%0.2fs)\n',toc-toc1);
 %% Create left-right masks
 [Z DXR DT1] = ndgrid(axial,dLatR(:,1),t1);
 [Z DXL DT1] = ndgrid(axial,dLatL(:,1),t1);
+if exipar.pushFocalDepth(2)
 DZ = Z-par.pushFocalDepth(2);
 MSKR = (abs(DXR+1)./(DT1))>0.5 & (abs(DXR)./(DT1+.05))<6 & (0.8*abs(DZ)-4*DXR)<1;
 MSKL = (abs(DXL-1)./(DT1))>0.5 & (abs(DXL)./(DT1+.05))<6 & (0.8*abs(DZ)+4*DXL)<1;
@@ -347,6 +349,7 @@ ttpsR = -1*squeeze(nanmedian(tpkR1,3));
 %%
 ttps = nanmean(cat(4,tpkLclip,tpkRclip),4);
 ttps1 = nanmean(cat(4,tpkL1clip,tpkR1clip),4);
+%ttps1=ttps;
 
 %% for now Adam Addded a temporary section while I figure out how to filter the data better. This will Nan any value in the ttps matrix that is euqal to t1(1) because this is caused by some filtering problem
 ttps(ttps==t1(1) | ttps==-t1(2))=nan;
