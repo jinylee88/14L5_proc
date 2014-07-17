@@ -11,6 +11,7 @@ function procArfi14L5ModUnfocusedSWEI(fname, parFile, interpFactor, kernelLength
 
 addpath(fileparts(which(mfilename)));
 
+
 % Check inputs and set default parameters
 if nargin<1
     fname = dir('SWIF_AData*.bin');fname = fname(end).name;
@@ -19,6 +20,16 @@ end
 [basePath,fname] = fileparts(fname);
 timeStamp = fname(12:end);
 fname = fullfile(basePath, strcat(fname, '.bin'));
+
+%The SWIF-DMA buffer kicks in around 16MB, so this flag checks if the
+%buffer is being used or not to help determine the reference frame
+SWIFfile=dir(fname);
+if SWIFfile.bytes>16e6
+    DMABufferUsed=1;
+else
+    DMABufferUsed=0;
+end
+
 if nargin<2 || isempty(parFile)
     parFile = fullfile(pwd, sprintf('par_%s.mat',timeStamp));
     % Check to see if there is a time stamped parameters file, if it is in current directory, or one directory level higher
@@ -51,16 +62,34 @@ par = load(parFile);
 par.kernelLength = kernelLength;
 par.interpFactor = interpFactor;
 
-if exist(nDMASWIFbufferevents)
+if exist('par.nDMASWIFbufferevents')
     if nDMASWIFbufferevents==1
         par.nref=par.nref-1;  %With the DMA-SWIF buffer event on we get one more reference frame than we need
+    else
+        warning('Please set the nDMASWIFbufferevents to 1 in the sequence or the data will not be processed correctly')
     end
+else
+    warning('Please set the nDMASWIFbufferevents to 1 in the sequence or the data will not be processed correctly')
 end
 
 % Pull out IQ data
 data = readSwif(fname, dimsname);
-I = single(data.I(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+1):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
-Q = single(data.Q(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+1):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+if DMABufferUsed==0
+    if par.nDMASWIFbufferevents==1
+        I = single(data.I(:,:,[2:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+1):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+        Q = single(data.Q(:,:,[2:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+1):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+    else
+        I = single(data.I(:,:,[2:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+        Q = single(data.Q(:,:,[2:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+        
+    end
+    
+else
+    I = single(data.I(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+    Q = single(data.Q(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+    
+end
+
 %I = single(data.I(:,:,[2:2:6 7:(7+2) 11:2:29]));  %focused track data
 %Q = single(data.Q(:,:,[2:2:6 7:(7+2) 11:2:29]));  %focused track data
 clear data
