@@ -1,0 +1,87 @@
+function SWS = MModeSWS(dispStruct,z_out);
+%fprintf('loading %s...\n',fname);
+%dispStruct = load(fname);
+dispStruct.t = dispStruct.t(1:size(dispStruct.u,3));
+theta = dispStruct.theta(1,:);
+axial = dispStruct.r;
+apex = dispStruct.apex;
+t = dispStruct.t;
+A = dispStruct.lambdamicron / (2^16);
+u1 = single(dispStruct.u)*A;
+idxNaN = 5:56:size(u1,3);
+u1(:,:,idxNaN) = u1(:,:,idxNaN-1);
+u1(:,:,idxNaN+1) = u1(:,:,idxNaN+2);
+%cc = (10.^(-5e-4*single(dispStruct.cc)));
+[X Z DX] = sectorCoordinates(theta,theta,axial,apex);
+clear dispStruct
+%z_out = 0:0.5:20;
+kernel_z = 1;
+WPASS = [100 1800];
+KPASS = [100 1000];
+xrange = [0 3];
+kernel_length = 1/180; %s
+search_region = [0.5 8]; %m/s
+search_step = 0.05;
+ct_search = search_region(1):search_step:search_region(2);
+dt = mean(diff(t));
+SWS = zeros(length(z_out),length(t));
+parfor depthidx = 1:length(z_out);
+    fprintf('Computing depth z = %0.2f...\n',z_out(depthidx));
+    msk = repmat((Z>(z_out(depthidx)-kernel_z/2))&(Z<=(z_out(depthidx)+kernel_z/2)),[1 1 size(u1,3)]);
+    xx = squeeze(sum(msk(:,:,1).*X,1)./sum(msk(:,:,1),1))*1e-3;
+    dslice = squeeze(sum(msk.*u1,1)./sum(msk,1));
+    fprintf('Removing Lateral Median...\n')
+    dslice = dslice-repmat(median(dslice),size(dslice,1),1);
+    fprintf('Left-Right Filtering...\n')
+    F = fft2(dslice,512,2^nextpow2(size(dslice,2)));
+    kx = linspace(-1,1,512)*(1/mean(diff(xx)));
+    w = linspace(-1,1,2^nextpow2(size(dslice,2)))*(1/mean(diff(t)));
+    [W KX] = meshgrid(w,kx);
+    
+    B = gausswin(20)*gausswin(20)';
+         
+    msk = (KX.*W>0 & abs(W)>WPASS(1) & abs(W)<WPASS(2) & abs(KX)>KPASS(1) & abs(KX)<KPASS(2));
+    msk = fftshift(filter2(B./sum(B(:)),msk,'same'));
+    sliceTmp = ifft2(F.*msk);
+    sliceTmp = real(sliceTmp(1:16,1:size(dslice,2)));
+    
+    dslice = sliceTmp(:,:,ones(1,length(ct_search)));
+    
+    msk = (KX.*W<0 & abs(W)>WPASS(1) & abs(W)<WPASS(2) & abs(KX)>KPASS(1) & abs(KX)<KPASS(2));
+   
+    msk = fftshift(filter2(B./sum(B(:)),msk,'same'));
+    sliceTmp = ifft2(F.*msk);
+    sliceTmp = real(sliceTmp(17:32,1:size(dslice,2)));
+    
+    dslice(17:32,:,:) = sliceTmp(:,:,ones(1,length(ct_search)));
+   
+    %clear F FL FR mskL mskR KX W msk sliceL sliceR
+    
+    %toc1 = toc;
+    fprintf('shifting slices (%g:%g:%g m/s)...',search_region(1),search_step,search_region(2))
+    %clear tmp
+    strng = sprintf('%0.2g m/s',ct_search(1));
+    fprintf('%s',strng);
+    %sliceLR = repmat(sliceLR,[1 1 length(ct_search)]);
+    for j = 1:length(ct_search);
+        fprintf(repmat('\b',1,length(strng)));
+        strng = sprintf('%0.2g m/s',ct_search(j));
+        fprintf('%s',strng);
+        shift = abs(xx)/ct_search(j);
+        for k = 1:length(xx);
+            dslice(k,:,j) = interp1(t,dslice(k,:,j),t+shift(k),'linear',0);
+        end
+    end
+    %fprintf('done (%0.2g s)\n',toc-toc1);
+    fprintf('done\n')
+    
+    fprintf('Calculating cost function...\n');
+    xidx = abs(xx*1e3)>=xrange(1) & abs(xx*1e3)<=xrange(2);
+    sigLR = squeeze(std(dslice(xidx,:,:)));
+    K = ones(ceil(kernel_length/dt),1);
+    sigLR = filter2(K,sigLR,'same')./filter2(K,1+0*sigLR,'same');
+    [pk minidxLR] = min(sigLR,[],2);
+    SWS(depthidx,:) = squeeze(ct_search(minidxLR));
+end
+
+

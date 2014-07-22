@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+#$ -S /bin/bash
+#$ -o /getlab/pjh7/scratch
+#$ -e /getlab/pjh7/scratch
+##$ -j y
+#$ -V
+#$ -cwd
+#$ -l mem_free=1G
+##$ -l num_proc=4
+#$ -t 1-4664
+#
+
+ulimit -v 1073741824
+
+#sleep $((${SGE_TASK_ID}*2))m
+matlab -nojvm -nodisplay -r "procArfi_wrapper_20130827($SGE_TASK_ID)"

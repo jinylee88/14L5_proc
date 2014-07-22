@@ -1,0 +1,17 @@
+#!/bin/bash
+#
+#$ -S /bin/bash
+#$ -o /getlab/pjh7/scratch
+#$ -e /getlab/pjh7/scratch
+##$ -j y
+#$ -V
+#$ -cwd
+#$ -l mem_free=4G
+##$ -l num_proc=4
+#$ -t 1-70
+#
+
+ulimit -v 4194304
+
+#sleep $((${SGE_TASK_ID}*2))m
+matlab -nojvm -nodisplay -r "TTPdynWrapper($SGE_TASK_ID)"

@@ -1,0 +1,14 @@
+function B = shift3(A,Shift);
+B = A;
+[L M N] = size(A);
+Shift = repmat(Shift,[1 1 N]);
+ShiftPx = floor(Shift);
+ShiftFrac = mod(Shift,1);
+[I J K] = ndgrid(1:L,1:M,1:N);
+Kshift0 = K + ShiftPx;
+Kshift1 = Kshift0 + 1;
+msk =  (K+Shift) < 1 | (K+Shift)>N;
+Kind0 = sub2ind(size(A),I,J,max(1,min(N,Kshift0)));
+Kind1 = sub2ind(size(A),I,J,max(1,min(N,Kshift1)));
+B(:) = A(Kind0).*(1-ShiftFrac) + A(Kind1).*(ShiftFrac);
+B(msk) = nan;
