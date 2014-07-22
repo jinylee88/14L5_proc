@@ -62,15 +62,15 @@ par = load(parFile);
 par.kernelLength = kernelLength;
 par.interpFactor = interpFactor;
 
-if exist('par.nDMASWIFbufferevents')
-    if nDMASWIFbufferevents==1
+%if exist('par.nDMASWIFbufferevents')
+    if par.nDMASWIFbufferevents==1
         par.nref=par.nref-1;  %With the DMA-SWIF buffer event on we get one more reference frame than we need
     else
         warning('Please set the nDMASWIFbufferevents to 1 in the sequence or the data will not be processed correctly')
     end
-else
-    warning('Please set the nDMASWIFbufferevents to 1 in the sequence or the data will not be processed correctly')
-end
+%else
+ %   warning('Please set the nDMASWIFbufferevents to 1 in the sequence or the data will not be processed correctly')
+%end
 
 % Pull out IQ data
 data = readSwif(fname, dimsname);

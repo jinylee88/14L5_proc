@@ -10,6 +10,7 @@ function prep14L5DataSWEI(resFile, parFile, leftBeams, rightBeams)
 
 res=load(resFile);
 [ax Aline lateral time]= size(res.arfidata);
+res.arfidata=res.arfidata(:,:,:,1:length(res.t));
 % res.arfidata=res.arfidata(:,:,:,[1:3 9:length(res.t)]);  %%manual ts
 % removal
 % res.t=res.t([1:3 9:length(res.t)]); %%manual ts
