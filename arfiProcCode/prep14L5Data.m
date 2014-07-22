@@ -11,7 +11,7 @@ function prep14L5Data(resFile, parFile, leftBeams, rightBeams)
 res=load(resFile);
 [ax Aline lateral time]= size(res.arfidata);
 res.arfidata=res.arfidata(:,:,:,1:length(res.t));
-[t, arfidata2] = filtArfiData2(res.axial, res.t, res.arfidata, [50 1.8e3]);
+[t, arfidata2] = filtArfiData(res.axial, res.t, res.arfidata, [50 1.8e3]);
 arfidata2=reshape(arfidata2,size(arfidata2,1),rightBeams(end), [] , length(t));
 numBeams=length(leftBeams);
 axial=res.axial;
