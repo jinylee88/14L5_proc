@@ -85,8 +85,8 @@ if DMABufferUsed==0
     end
     
 else
-    I = single(data.I(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
-    Q = single(data.Q(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+2):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+    I = single(data.I(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+1):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
+    Q = single(data.Q(:,:,[1:2:par.nref (par.nref+1):(par.nref+length(par.pushFocalDepth)) (par.nref+length(par.pushFocalDepth)+1):2:(par.nref+length(par.pushFocalDepth)+par.ntrack(1)) (par.nref+length(par.pushFocalDepth)+par.ntrack(1)+1):end-1])); %unfocused track data
     
 end
 
@@ -280,11 +280,11 @@ end
 
 % Check existing parameters, add proc parameters to parFile
 par = checkParams(par);
-parFile = fullfile(pwd, sprintf('parS_%s.mat',timeStamp));
+parFile = fullfile(pwd, sprintf('parS1_%s.mat',timeStamp));
 save(parFile,'-struct','par');
 
 % Save time stamped results file
-resfile = ['resS_' timeStamp '.mat'];  %S for SWEI
+resfile = ['resS1_' timeStamp '.mat'];  %S for SWEI
 arfi2=arfidata;
 
 if strcmp(par.probeType,'linear')

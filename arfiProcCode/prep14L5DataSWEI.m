@@ -6,7 +6,7 @@ function prep14L5DataSWEI(resFile, parFile, leftBeams, rightBeams)
 %push track beams such as [1:7] in the current case
 %rightBeams is a vector of the parts of the arfidata that constitue left of
 %push track beams such as [9:15] in the current case
-
+addpath /luscinia/ProstateStudy/abp19/14L5_proc/arfiProcCode/
 
 res=load(resFile);
 [ax Aline lateral time]= size(res.arfidata);
